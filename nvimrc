@@ -18,9 +18,6 @@ let g:python3_host_prog = "~/.local/share/nvim/nvim-env/bin/python3"
 " Plugins will be downloaded under the specified directory.
 call plug#begin('~/.config/nvim/plugged')
 
-" TODO maybe interesting: telescope,treesitter,nvim-dap(-ui)
-" TODO switch to packer? https://discord.com/channels/694667287214555158/820378480990224424/951195309848023102
-
 " Declare the list of plugins.
 Plug 'tpope/vim-surround'
 Plug 'numToStr/Comment.nvim'
@@ -272,8 +269,6 @@ augroup textwidth
 	autocmd!
 	autocmd BufRead,BufNewFile *.md setlocal textwidth=80
 augroup end
-
-autocmd BufRead,BufNewFile *.camkes set ft=camkes " TODO remove
 
 " begin to scrol 5 lines from the bottom/top
 set scrolloff=5

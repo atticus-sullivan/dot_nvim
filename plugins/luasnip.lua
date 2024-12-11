@@ -28,11 +28,11 @@ ls.config.set_config {
 	region_check_events = "CursorMoved",
 	delete_check_events = "TextChanged",
 	enable_autosnippets=true,
-	store_selection_keys="<Tab>",
+	cut_selection_keys="<Tab>",
 }
 
 require("luasnip.loaders.from_lua").load{
-	paths = "~/.config/nvim/lua/luasnip_settings"
+	paths = {"~/.config/nvim/lua/luasnip_settings"}
 }
 
 -- ChoiceNode-Popup

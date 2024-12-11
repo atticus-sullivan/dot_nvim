@@ -15,8 +15,16 @@ local rep            = require("luasnip.extras").rep
 local expand_cond    = require("luasnip.extras.conditions.expand")
 local make_condition = require("luasnip.extras.conditions").make_condition
 
-local function visual_selection(_, parent)
-    return parent.snippet.env.TM_SELECTED_TEXT or {}
+-- use this in a dynamic node to either get the visual text or an insert node
+local function visual_selection(_, parent, _, uarg)
+	print(uarg)
+	local nodes = {}
+	if #parent.snippet.env.LS_SELECT_RAW > 0 then
+		nodes = {t(parent.snippet.env.LS_SELECT_RAW)}
+	else
+		nodes = {i(unpack(uarg.i))}
+	end
+    return sn(nil, nodes)
 end
 
 -- don't expose the raw fmt to the outside
@@ -432,22 +440,14 @@ function snip_gen.ordinary(snipps)
 
 	table.insert(snipps, s({trig="mmp", name="minipage"}, fmt(
 	[[
-	\begin{minipage}{<width>}<stop><last>
+	\begin{minipage}{<width>}
+		<stop>
 	\end{minipage}]], {
 		width = c(1, {
 			sn(nil, {t("0."), i(1, "49"), t[[\linewidth]]}),
 			i(nil)
 		}),
-		stop = isn(nil, {f(function(_,parent)
-				if parent.snippet.env.TM_SELECTED_TEXT then
-					local ret = parent.snippet.env.TM_SELECTED_TEXT
-					table.insert(ret, 1, "")
-					return ret
-				else
-					return {}
-				end
-			end)}, "$PARENT_INDENT\t"),
-		last = i(0),
+		stop = isn(0, {d(1, visual_selection, nil, {user_args={{i={1}}}})}, "$PARENT_INDENT\t"),
 	}))
 	)
 
@@ -706,7 +706,7 @@ function snip_gen.text(snipps)
 end
 
 function snip_gen.cite(snipps)
-	table.insert(snipps, s({trig="biblatex"}, fmt(
+	table.insert(snipps, s({trig="default_biblatex"}, fmt(
 	[[
 	\usepackage[
 		backend=biber,
@@ -755,6 +755,13 @@ function snip_gen.cite(snipps)
 		-- ensure that it only is expanded if not being inside the cite snippet
 		condition = function(line_to_cursor,_,_) return line_to_cursor:match("%scite$") or line_to_cursor:match("^cite$") end
 	})
+	)
+
+	table.insert(snipps, s({trig="\"\"", name="enclose with quotation marks"}, fmt(
+	[[\enquote{<body>}]],
+	{
+		body = d(1, visual_selection, nil, {user_args={{i={1}}}}),
+	}))
 	)
 end
 
@@ -985,7 +992,15 @@ function snip_gen.glossaries(snipps)
 	[[\<prefix>gls<suffix>{<ref>}]],
 	{
 		prefix=c(1, {t(""), t("p")}),
-		suffix=c(2, {t(""), t("l"), t("s"), t("pl")}),
+		suffix=c(2, {t(""), t("pl")}),
+		ref=i(3),
+	}))
+	)
+	table.insert(snipps, s({trig="glosx", name="glossaries extra"}, fmt(
+	[[\<prefix>xtr<suffix>{<ref>}]],
+	{
+		prefix=c(1, {t("gls"), t("Gls"), t("GLS")}),
+		suffix=c(2, {t(""), t("short"), t("shortpl"), t("long"), t("longpl"), t("full"), t("")}),
 		ref=i(3),
 	}))
 	)
