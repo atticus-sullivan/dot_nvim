@@ -135,20 +135,22 @@ local snip_gen = {}
 
 function snip_gen.default_preamble(snipps)
 	table.insert(snipps, s({trig="default article"}, fmt(
-	[[<XeLua_or_plain>
+	[[
+	<XeLua_or_plain>
 	\documentclass[a4paper, 12pt]{scrartcl}
 
 	<plain_lua_I>
 	% ----- Packages -----
 	\usepackage{xspace}
 	\newcommand{\zB}{z.\,B.\xspace}
+	\newcommand{\tos}{$\to$\xspace}
 	\usepackage{scrlayer-scrpage}                 % header and footer
 	\usepackage[ngerman]{babel}                   % translate fixed strings and load german hyphenation
 	<plain_lua_II>
 	\usepackage{microtype}
 	\usepackage{fontspec}
-	\usepackage{zref-clever}
 	\usepackage[<hyperef_col>breaklinks=true]{hyperref}       % make e.g. toc clickable
+	\usepackage{cleveref}
 	% \usepackage{showframe}                      % show page boundaries to check if lines are too long
 	\usepackage[german=quotes]{csquotes}      % pick always the right quotation marks
 
@@ -159,6 +161,7 @@ function snip_gen.default_preamble(snipps)
 
 	% \usepackage[ngerman]{isodate} % localized date formatting
 
+	\usepackage{catppuccinpalette}
 	\usepackage{graphicx}         % include graphics
 	\usepackage{tabularx}         % better configuration of tables
 	\usepackage{ltxtable}         % use tabularx as longtable (\LTXtable{width}{pathToTable}) where the table referenced to contains of \begin{longtable}{preamble}content\end{longtable}
@@ -377,7 +380,7 @@ function snip_gen.default_preamble(snipps)
 		{€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
 		{»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1
 	}]], {
-		stringspaces = i(1, "true"),
+		stringspaces = i(1, "false"),
 		tabs         = rep(1),
 		spaces       = rep(1),
 	}))

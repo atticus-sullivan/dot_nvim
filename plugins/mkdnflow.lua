@@ -7,7 +7,7 @@ require('mkdnflow').setup({
         cursor = true,
         folds = true,
         links = true,
-        lists = true,
+        lists = false,
         maps = true,
         paths = true,
         tables = true

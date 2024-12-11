@@ -69,6 +69,7 @@ Plug 'nvim-tree/nvim-tree.lua'
 " Plug 'nvim-neotest/nvim-nio'
 
 Plug 'jakewvincent/mkdnflow.nvim'
+Plug 'bullets-vim/bullets.vim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'teal-language/vim-teal'
 
