@@ -63,8 +63,10 @@ Plug 'nvim-tree/nvim-tree.lua'
 " Plug 'rhysd/vim-grammarous'
 
 " Plug 'mfussenegger/nvim-dap'
+" Plug 'mfussenegger/nvim-dap-python'
 " Plug 'leoluz/nvim-dap-go'
 " Plug 'rcarriga/nvim-dap-ui'
+" Plug 'nvim-neotest/nvim-nio'
 
 Plug 'jakewvincent/mkdnflow.nvim'
 Plug 'nvim-lua/plenary.nvim'

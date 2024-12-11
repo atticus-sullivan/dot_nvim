@@ -1,7 +1,8 @@
 local dap = require("dap")
 local dapui = require("dapui")
 
-require('dap-go').setup()
+-- require('dap-go').setup()
+require("dap-python").setup("python3")
 
 vim.keymap.set('n', '<leader>dc', function() dap.continue() end)
 vim.keymap.set('n', '<leader>dl', function() dap.run_last() end)
