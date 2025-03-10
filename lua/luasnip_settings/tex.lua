@@ -17,15 +17,13 @@ local make_condition = require("luasnip.extras.conditions").make_condition
 
 -- use this in a dynamic node to either get the visual text or an insert node
 local function visual_selection(_, parent, _, uarg)
-	print(uarg)
-	local nodes = {}
 	if #parent.snippet.env.LS_SELECT_RAW > 0 then
-		nodes = {t(parent.snippet.env.LS_SELECT_RAW)}
+		return sn(nil, {t(parent.snippet.env.LS_SELECT_RAW)})
 	else
-		nodes = {i(unpack(uarg.i))}
+		return sn(nil, {i(unpack(uarg.i))})
 	end
-    return sn(nil, nodes)
 end
+-- body  = sn(3, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
 
 -- don't expose the raw fmt to the outside
 local fmt
@@ -89,27 +87,59 @@ local function gen_env_node(env)
 		[0]  = i(0),
 	})
 end
-local plain = {
-	"",
-	{
-		[[\usepackage[utf8]{inputenc}                   % encoding of the inputfile]],
-		[[\usepackage[T1]{fontenc}                      % Westeuropean charset]],
-		[[\usepackage{lmodern}                          % more modern font]],
+
+local variants = {
+	engine = {
+		pdflatex = {
+			font =
+				{
+					[[\usepackage[utf8]{inputenc}                   % encoding of the inputfile]],
+					[[\usepackage[T1]{fontenc}                      % Westeuropean charset]],
+					[[\usepackage{lmodern}                          % more modern font]],
+					"",
+				},
+		},
+		lualatex = {
+			font =
+				{
+					[[\usepackage{fontspec} % LuaLaTeX]],
+					"",
+				},
+		},
+	},
+	lang = {
+		en = {
+			csquotes = "english=american",
+			xspace = {
+				[[\newcommand{\eg}{e.\,g.\xspace}]],
+			},
+			babel = "english",
+		},
+		de = {
+			csquotes = "german=quotes",
+			xspace = {
+				[[\newcommand{\zB}{z.\,B.\xspace}]],
+			},
+			babel = "ngerman"
+		},
 	},
 }
-local lua = {
-	{[[ \usepackage{fontspec} % LuaLaTeX]], ""},
-	""
-}
-local function plain_or_lua(args,_ , uarg1)
-	if args[1] == "%!TeX program = lualatex" then
-		return lua[uarg1]
-	elseif args[1] == "%!TeX program = pdflatex" then
-		return plain[uarg1]
-	else
-		return ""
+
+-- local function plain_or_lua(args,_ , uarg1)
+local function from_variant(args, _, uarg1, uarg2)
+	for k,v in pairs(variants) do
+		if k == uarg1 then
+			for j,jj in pairs(v) do
+				if j == args[1][1] then
+					return jj[uarg2]
+				end
+			end
+			break
+		end
 	end
+	return ""
 end
+
 local function itemI(args)
 	if args[1][1] == "enumerate" then
 		return sn(nil, {
@@ -127,6 +157,27 @@ local function itemI(args)
 	end
 end
 
+local common_settings = [[\usepackage{xspace}
+	<xspace>
+	\newcommand{\tos}{$\to$\xspace}
+	\usepackage[<babel>]{babel}                   % translate fixed strings and load german hyphenation
+	\usepackage{cleveref}
+	% \usepackage{showframe}                      % show page boundaries to check if lines are too long
+	\usepackage[<csquotes>]{csquotes}      % pick always the right quotation marks
+
+	% \usepackage{multicol} % use \begin{multicols}{num} text \end{multicols} and the text will be automatically distributed
+
+	\usepackage{todo}               % to enter todos in the document
+	% \usepackage{subcaption}       % for subfigures
+
+	\usepackage{graphicx}         % include graphics
+	\usepackage{tabularx}         % better configuration of tables
+	% \usepackage{ltxtable}         % use tabularx as longtable (\LTXtable{width}{pathToTable}) where the table referenced to contains of \begin{longtable}{preamble}content\end{longtable}
+	\usepackage{booktabs}         % more nice rules (headrule/midrule/crule/bottomrule)
+
+	\usepackage{xcolor}
+
+	% \usepackage{pifont} % special characters (insert via \ding{num}) ->> texdoc psnfss2e]]
 
 --------------
 -- SNIPPETS --
@@ -134,42 +185,19 @@ end
 local snip_gen = {}
 
 function snip_gen.default_preamble(snipps)
-	table.insert(snipps, s({trig="default article"}, fmt(
+	table.insert(snipps, s({trig="def_article"}, fmt(
 	[[
-	<XeLua_or_plain>
+	% engine: <engineDef>
+	% language: <languageDef>
 	\documentclass[a4paper, 12pt]{scrartcl}
 
-	<plain_lua_I>
+	<font>
 	% ----- Packages -----
-	\usepackage{xspace}
-	\newcommand{\zB}{z.\,B.\xspace}
-	\newcommand{\tos}{$\to$\xspace}
-	\usepackage{scrlayer-scrpage}                 % header and footer
-	\usepackage[ngerman]{babel}                   % translate fixed strings and load german hyphenation
-	<plain_lua_II>
-	\usepackage{microtype}
-	\usepackage{fontspec}
-	\usepackage[<hyperef_col>breaklinks=true]{hyperref}       % make e.g. toc clickable
-	\usepackage{cleveref}
-	% \usepackage{showframe}                      % show page boundaries to check if lines are too long
-	\usepackage[german=quotes]{csquotes}      % pick always the right quotation marks
-
-	% \usepackage{multicol} % use \begin{multicols}{num} text \end{multicols} and the text will be automatically distributed
-
-	\usepackage{todo}               % to enter todos in the document
-	% \usepackage{subcaption}       % for subfigures
-
-	% \usepackage[ngerman]{isodate} % localized date formatting
-
+	\usepackage{scrlayer-scrpage}                       % header and footer
 	\usepackage{catppuccinpalette}
-	\usepackage{graphicx}         % include graphics
-	\usepackage{tabularx}         % better configuration of tables
-	\usepackage{ltxtable}         % use tabularx as longtable (\LTXtable{width}{pathToTable}) where the table referenced to contains of \begin{longtable}{preamble}content\end{longtable}
-	\usepackage{booktabs}         % more nice rules (headrule/midrule/crule/bottomrule)
-
-	\usepackage{xcolor}
-
-	% \usepackage{pifont} % special characters (insert via \ding{num})
+	\usepackage[<hyperef_col>breaklinks=true]{hyperref} % make e.g. toc clickable
+	\usepackage{microtype}
+	]]..common_settings..[[
 
 	% ----- Settings -----
 	\KOMAoptions{
@@ -194,19 +222,24 @@ function snip_gen.default_preamble(snipps)
 	\todos
 	\end{document}
 	]], {
-		["hyperef_col"] = i(2, "colorlinks=false,"),
-		[2] = i(2),
+		["engineDef"]   = c(1, {t("lualatex"), t("pdflatex")}),
+		["languageDef"] = c(2, {t("en"), t("de")}),
+		["font"]        = f(from_variant, {1}, {user_args={"engine", "font"}}),
+		["xspace"]      = f(from_variant, {2}, {user_args={"lang", "xspace"}}),
+		["csquotes"]    = f(from_variant, {2}, {user_args={"lang", "csquotes"}}),
+		["babel"]       = f(from_variant, {2}, {user_args={"lang", "babel"}}),
+		["hyperef_col"] = i(3, "colorlinks=false,"),
+
+		[2] = i(4),
 		[0] = i(0),
-		["XeLua_or_plain"] = c(1, {t("%!TeX program = lualatex"), t("%!TeX program = pdflatex")}),
-		["plain_lua_I"] = f(plain_or_lua, {1}, {userargs={1}}),
-		["plain_lua_II"] = f(plain_or_lua, {1}, {userargs={2}}),
 	}
 	))
 	)
 
-	table.insert(snipps, s({trig="default beamer"}, fmt(
+	table.insert(snipps, s({trig="def_beamer"}, fmt(
 	[[
-	%!TeX program = lualatex
+	% engine: <engineDef>
+	% language: <languageDef>
 
 	\documentclass[ignorenonframetext,aspectratio=169,hyperref={<hyperref_col>breaklinks=true}]{beamer} % pass handout option to create a handout and \usepackage{pgfpages} \pgfpagesuselayout{4 on 1}[a4paper,border shrink=5mm]
 	% documentclass may be (article,book,...) too, load then the package beamerarticle (with \cmd<<presentation>> a command may be only printed in the presentation mode)
@@ -231,30 +264,16 @@ function snip_gen.default_preamble(snipps)
 		\usecolortheme[style=Latte]{catppuccin}
 		% \setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
 		% \setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+		% \setbeamertemplate{navigation symbols}{} % To remove the navigation symbols in the footline
 	}
 
-	\usepackage{fontspec} %
-
+	<font>
 	% ----- Packages -----
-	\usepackage{xspace}
-	\newcommand{\zB}{z.\,B.\xspace}
-	\usepackage[ngerman]{babel}                   % translate fixed strings and load german hyphenation
-	% \usepackage{showframe}                      % show page boundaries to check if lines are too long
-	\usepackage[german=quotes]{csquotes}      % pick always the right quotati
+	]]..common_settings..[[
 
-	\usepackage{todo}               % to enter todos in the document
-	% \usepackage{subcaption}       % for subcaption
-
-	% \usepackage[ngerman]{isodate} % localized date
-
-	\usepackage{graphicx}         % include graphics
-	\usepackage{tabularx}         % better configuration of tables
-	\usepackage{ltxtable}         % use tabularx as longtable (\LTXtable{width}{pathToTable}) where the table referenced to contains of \begin{longtable}{preamble}content\end{longtable}
-	\usepackage{booktabs}         % more nice rules (headrule/midrule/crule/bot
-
-	\usepackage{xcolor}
-
-	% \usepackage{pifont} % special characters (insert via \ding)
+	% \tikzset{onslide/.code args={<<#1>>#2}{%
+	% 		\only<<#1>>{\pgfkeysalso{#2}} 
+	% }}
 
 	\title<short-title>{<title>}
 	% \subtitle[short]{subtitle}
@@ -297,15 +316,22 @@ function snip_gen.default_preamble(snipps)
 	% \todos
 	\end{document}
 	]], {
-		["hyperref_col"] = i(1, "colorlinks=false,"),
-		["short-title"]  = i(2, "[short-title]"),
-		["title"]        = i(3),
-		["author"]       = i(4),
+		["engineDef"]   = c(1, {t("lualatex"), t("pdflatex")}),
+		["languageDef"] = c(2, {t("en"), t("de")}),
+		["font"]        = f(from_variant, {1}, {user_args={"engine", "font"}}),
+		["xspace"]      = f(from_variant, {2}, {user_args={"lang", "xspace"}}),
+		["csquotes"]    = f(from_variant, {2}, {user_args={"lang", "csquotes"}}),
+		["babel"]       = f(from_variant, {2}, {user_args={"lang", "babel"}}),
+		["hyperref_col"] = i(3, "colorlinks=false,"),
+
+		["short-title"]  = i(4, "[short-title]"),
+		["title"]        = i(5),
+		["author"]       = i(6),
 		[0]              = i(0),
 	}))
 	)
 
-	table.insert(snipps, s({trig="default algorithm", name="load default algorithm settings"}, fmt(
+	table.insert(snipps, s({trig="def_algorithm", name="load default algorithm settings"}, fmt(
 	[[
 	\usepackage[linesnumbered,vline,ruled,titlenotnumbered]{algorithm2e}  % for pseudocode
 
@@ -322,7 +348,7 @@ function snip_gen.default_preamble(snipps)
 	)
 
 	-- TODO rework the styling
-	table.insert(snipps, s({trig="default listings", name="load default listings settings"}, fmt(
+	table.insert(snipps, s({trig="def_listings", name="load default listings settings"}, fmt(
 	[[
 	\usepackage{listings} % for code
 
@@ -386,7 +412,7 @@ function snip_gen.default_preamble(snipps)
 	}))
 	)
 
-	table.insert(snipps, s({trig="default hyperref metatada"}, fmt(
+	table.insert(snipps, s({trig="def_hyperref"}, fmt(
 	[[
 	\hypersetup{
 		pdfauthor={<author>},
@@ -402,34 +428,107 @@ function snip_gen.default_preamble(snipps)
 		}))
 	)
 
-	table.insert(snipps, s({trig="default math"}, fmt(
+	table.insert(snipps, s({trig="def_math"}, fmt(
 	[[
 	% \usepackage{nicematrix}       % easy configurable array/matrix environments
 	% \usepackage{amsmath, amssymb} % mathematical Symbols
 	% \usepackage{mathtools}        % Text under equation
 	% \usepackage{cancel}           % strikeout text
 	% \usepackage{physics}          % don't know
-	% \usepackage{siunitx}          % simpler variables
 	% \usepackage{textcomp}         % For arrow
 	% \setlength\mathindent{0cm}    % indentation of formulars
 	% \openup 0.5\jot               % set linespacing in mathmode (does not affect spacing in normal mode)
 	]], {}))
 	)
 
-	table.insert(snipps, s({trig="default tikz"}, fmt(
+	table.insert(snipps, s({trig="def_siunitx"}, fmt(
 	[[
-	% \usepackage{tikz}
-	% \usetikzlibrary{calc,positioning,fit}  % calc for $...$ calculations, positioning for .west .south positioning
-	% \usepackage{pgfplots}                  % draw diagrams
-	% \usepackage{pgfkeys}                   % nice key management
+	% \usepackage[per-mode=fraction,sticky-per]{siunitx}
+	% \usepackage[gen]{eurosym}
+	% \DeclareSIUnit{\sieuro}{\text{\euro}}
 	]], {}))
 	)
+
+	table.insert(snipps, s({trig="def_tikz"}, fmt(
+	[[
+	% \usepackage{tikz}
+	% \usetikzlibrary{calc,positioning,fit,arrows.meta}  % calc for $...$ calculations, positioning for .west .south positioning
+	% \usetikzlibrary{decorations.pathreplacing}
+	% \usepackage{pgfplots}                  % draw diagrams
+	% \usepackage{pgfkeys}                   % nice key management
+	% \tikzset{
+	% 	>>={Stealth[scale=1.25]}, % use a nicer/better visible arrow tip
+	% 	% every picture/.style={semithick,}, % increase linewidth (default is 0.4pt / thin)
+	% }
+	]], {}))
+	)
+
 end
 
 function snip_gen.ordinary(snipps)
 	table.insert(snipps,
 		s({trig="...", name="ldots", snippetType="autosnippet"}, t([[\ldots]]))
 	)
+
+	table.insert(snipps,
+		s({trig="landscape", name="switch page to landscape"}, t([[\KOMAoptions{paper=landscape}\recalctypearea]]))
+	)
+	table.insert(snipps,
+		s({trig="portrait", name="switch page to portrait"}, t([[\KOMAoptions{paper=portrait}\recalctypearea]]))
+	)
+
+	table.insert(snipps, s({trig="tc", wordTrig=true, name="textcolor"}, fmt(
+	[[\textcolor{<color>}{<body>}]],
+	{
+		color = i(1),
+		body  = sn(2, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
+	}), {
+			-- condition = expand_cond.in_mathzone,
+			-- show_condition = expand_cond.in_mathzone
+		})
+	)
+	table.insert(snipps, s({trig="em", wordTrig=true, name="emphazise text"}, fmt(
+	[[\emph{<body>}]],
+	{
+		body  = sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
+	}), {
+			-- condition = expand_cond.in_mathzone,
+			-- show_condition = expand_cond.in_mathzone
+		})
+	)
+
+	-- TODO move this
+	table.insert(snipps, s({trig="qty", wordTrig=true, name="insert quantity (siunitx)"}, fmt(
+	[[\qty{<num>}{<unit>}]],
+	{
+		unit = c(2, {i(nil), t"\\percent", t"\\celsius"}),
+		num  = i(1),
+	}), {
+			-- condition = expand_cond.in_mathzone,
+			-- show_condition = expand_cond.in_mathzone
+		})
+	)
+	table.insert(snipps, s({trig="qtyr", wordTrig=true, name="insert quantity range (siunitx)"}, fmt(
+	[[\qty{<numA>}{<numB>}{<unit>}]],
+	{
+		unit = c(3, {i(nil), t"\\percent", t"\\celsius"}),
+		numA = i(1),
+		numB = i(2),
+	}), {
+			-- condition = expand_cond.in_mathzone,
+			-- show_condition = expand_cond.in_mathzone
+		})
+	)
+	table.insert(snipps, s({trig="unit", wordTrig=true, name="insert unit (siunitx)"}, fmt(
+	[[\unit{<unit>}]],
+	{
+		unit = c(1, {i(nil), t"\\percent", t"\\celsius"}),
+	}), {
+			-- condition = expand_cond.in_mathzone,
+			-- show_condition = expand_cond.in_mathzone
+		})
+	)
+	-- TODO $$ macro? (with visual selection)
 
 	table.insert(snipps, s({trig="beg", name="begin{} / end{}"}, fmt(
 	[[\begin{<1>}]] .. "\n" ..
@@ -450,14 +549,14 @@ function snip_gen.ordinary(snipps)
 			sn(nil, {t("0."), i(1, "49"), t[[\linewidth]]}),
 			i(nil)
 		}),
-		stop = isn(0, {d(1, visual_selection, nil, {user_args={{i={1}}}})}, "$PARENT_INDENT\t"),
+		stop = isn(2, {d(1, visual_selection, nil, {user_args={{i={1}}}})}, "$PARENT_INDENT\t"),
 	}))
 	)
 
 	table.insert(snipps, s({trig="txt", name="\\text{}"}, {t"\\text{", i(1), t"}"})
 	)
 
-	table.insert(snipps, s({trig="ref", name="\\autoref{}"}, {t"\\autoref{", i(1), t"}"})
+	table.insert(snipps, s({trig="ref", name="\\cref{}"}, {t"\\cref{", i(1), t"}"})
 	)
 end
 
@@ -511,10 +610,11 @@ function snip_gen.math(snipps)
 		{"prod", "Product"}} do
 		local trig,name,str = unpack(e)
 		table.insert(snipps, s({trig=trig, name=name}, fmt(
-			"\\"..(str or trig) .. [[_{<start>}^{<stop>}]],
+			"\\"..(str or trig) .. [[_{<start>}^{<stop>} <body>]],
 			{
 				start = i(1, "n = 1"),
 				stop  = i(2, "\\infty"),
+				body  = sn(3, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
 			}
 		), {
 				-- condition = expand_cond.in_mathzone,
@@ -532,9 +632,9 @@ function snip_gen.math(snipps)
 		{"floor", "floor", "floor"}} do
 		local trig,name,strL,strR = unpack(e)
 		table.insert(snipps, s({trig=trig, name=name}, fmt(
-			[[\left]].. (strL) .. [[ <text> \right]] .. (strR or strL),
+			[[\left]].. (strL) .. [[ <body> \right]] .. (strR or strL),
 			{
-				text = i(1),
+				body  = sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
 			}
 		), {
 				-- condition = expand_cond.in_mathzone,
@@ -566,6 +666,7 @@ function snip_gen.math(snipps)
 			-- condition = expand_cond.in_mathzone, show_condition = expand_cond.in_mathzone
 		})
 	)
+
 	table.insert(snipps, s({trig="cases", name="custom cases"}, fmt(
 	[[
 	\begin{array}{@{}l@{\quad}l@{}}
@@ -578,20 +679,19 @@ function snip_gen.math(snipps)
 		})
 	)
 
-
 	table.insert(snipps, s({trig="t^^", wordTrig=false, name="text superscript"}, fmt(
-	[[^\text{<1>}]],
+	[[^\text{<body>}]],
 	{
-		[1] = i(1),
+		body  = sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
 	}), {
 			-- condition = expand_cond.in_mathzone,
 			-- show_condition = expand_cond.in_mathzone
 		})
 	)
 	table.insert(snipps, s({trig="^^", wordTrig=false, name="superscript"}, fmt(
-	[[^{<1>}]],
+	[[^{<body>}]],
 	{
-		[1] = i(1),
+		body  = sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
 	}), {
 			-- condition = expand_cond.in_mathzone,
 			-- show_condition = expand_cond.in_mathzone
@@ -599,19 +699,18 @@ function snip_gen.math(snipps)
 	)
 
 	table.insert(snipps, s({trig="t__", wordTrig=false, name="text subscript"}, fmt(
-	[[_\text{<1>}]],
+	[[_\text{<body>}]],
 	{
-		[1] = i(1),
+		body  = sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
 	}), {
 			-- condition = expand_cond.in_mathzone,
 			-- show_condition = expand_cond.in_mathzone
 		})
 	)
-
 	table.insert(snipps, s({trig="__", wordTrig=false, name="subscript"}, fmt(
-	[[_{<1>}]],
+	[[_{<body>}]],
 	{
-		[1] = i(1),
+		body  = sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
 	}), {
 			-- condition = expand_cond.in_mathzone,
 			-- show_condition = expand_cond.in_mathzone
@@ -619,9 +718,9 @@ function snip_gen.math(snipps)
 	)
 
 	table.insert(snipps, s({trig="sq", name="\\sqrt{}"}, fmt(
-	[[\sqrt{<1>}]],
+	[[\sqrt{<body>}]],
 	{
-		[1] = i(1),
+		body  = sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
 	}), {
 			-- condition = expand_cond.in_mathzone,
 			-- show_condition = expand_cond.in_mathzone
@@ -629,12 +728,20 @@ function snip_gen.math(snipps)
 	)
 
 	-- TODO overline vs bar? also in text mode somehow?
-	table.insert(snipps, s({trig="conj", name="conjugate"}, {t"\\overline{", i(1), t"}"}, {
+	table.insert(snipps, s({trig="conj", name="conjugate"}, {
+		t"\\overline{",
+		sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})}),
+		t"}"
+	}, {
 		-- condition = expand_cond.in_mathzone, show_condition = expand_cond.in_mathzone
 		})
 	)
 
-	table.insert(snipps, s({trig="bar", name="bar"}, {t"\\overline{", i(1), t"}"}, {
+	table.insert(snipps, s({trig="bar", name="bar"}, {
+		t"\\overline{",
+		sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})}),
+		t"}"
+	}, {
 		-- condition = expand_cond.in_mathzone, show_condition = expand_cond.in_mathzone
 		})
 	)
@@ -647,7 +754,7 @@ function snip_gen.math(snipps)
 		table.insert(snipps, s({trig=trig, name=name}, fmt(
 			"\\".. (str or name) .. [[_{<subs>}]],
 			{
-				subs = i(1, def1),
+				subs = sn(1, {d(1, visual_selection, nil, {user_args={{i={1, def1}}}})})
 			}
 		), {
 				-- condition = expand_cond.in_mathzone, show_condition = expand_cond.in_mathzone
@@ -677,7 +784,7 @@ function snip_gen.math(snipps)
 	table.insert(snipps, s({trig="fr", name="\\frac{}{}"}, fmt(
 	[[\frac{<numer>}{<denom>}]],
 	{
-		numer = i(1),
+		numer = sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})}),
 		denom = i(2),
 	}), {
 			-- condition = expand_cond.in_mathzone, show_condition = expand_cond.in_mathzone
@@ -701,7 +808,7 @@ function snip_gen.text(snipps)
 		table.insert(snipps, s({trig=trig, name=name, priority=prio}, fmt(
 		"\\"..(str or trig) .. [[{<text>}]],
 		{
-			text = i(1),
+			text  = sn(1, {d(1, visual_selection, nil, {user_args={{i={1}}}})})
 		}
 		))
 		)
@@ -709,7 +816,7 @@ function snip_gen.text(snipps)
 end
 
 function snip_gen.cite(snipps)
-	table.insert(snipps, s({trig="default_biblatex"}, fmt(
+	table.insert(snipps, s({trig="def_biblatex"}, fmt(
 	[[
 	\usepackage[
 		backend=biber,
@@ -751,7 +858,6 @@ function snip_gen.cite(snipps)
 		citeauthor=c(3, {
 			t("cite"),
 			t("citeauthor"),
-			t("citeauthor"),
 		}),
 	}),
 	{
@@ -768,8 +874,8 @@ function snip_gen.cite(snipps)
 	)
 end
 
+-- TODO default tikz chains setup
 function snip_gen.tikz(snipps)
-	-- TODO default chains setup
 	-- helpers
 	local function arrow(jump)
 		return sn(jump, {
@@ -882,6 +988,15 @@ function snip_gen.tikz(snipps)
 		acc  = i(4, "accepting"),
 	}), {condition = expand_cond.in_tikz, show_condition = expand_cond.in_tikz})
 	)
+
+	table.insert(snipps, s({trig="brace", name="tikz brace"}, fmt(
+	[[\draw[decoration={brace,mirror,amplitude=8pt},decorate] (<start>) -- node[below,yshift=-8pt] {<text>} (<end>);]],
+	{
+		start   = i(1),
+		["end"] = i(2),
+		text    = i(0),
+	}), {condition = expand_cond.in_tikz, show_condition = expand_cond.in_tikz})
+	)
 end
 
 function snip_gen.floats(snipps)
@@ -967,16 +1082,26 @@ function snip_gen.listings(snipps)
 end
 
 function snip_gen.glossaries(snipps)
-	table.insert(snipps, s({trig="default glossaries"}, fmt(
+	table.insert(snipps, s({trig="def_glossaries"}, fmt(
 	[[
-	\usepackage[acronym,nomain]{glossaries-extra}
+	\usepackage[abbreviations,nomain]{glossaries-extra}
 	\usepackage{glossaries-prefix}
 	\setabbreviationstyle{long-short}
 	\makeglossaries
+
+	\newabbreviation[]{a:ttr}{TTR}{Tender for targeted resource}
+
+	% \newglossaryentry{g:utilization}{
+	% 	name={Utilization},
+	% 	description={$\frac{\text{Actual capacity}}{\text{Theoretically maximum capacity}}$},
+	% }
+
+	% \printabbreviations[title=Abbreviations]
+	% \printglossary
 	]], {}))
 	)
 
-	table.insert(snipps, s({trig="newabbrev"}, fmt(
+	table.insert(snipps, s({trig="abbrev"}, fmt(
 	[[
 	\newabbreviation[<opts>]{<key>}{<short>}{<long>}
 	]], {
@@ -1010,7 +1135,7 @@ function snip_gen.glossaries(snipps)
 end
 
 function snip_gen.tcolorbox(snipps)
-	table.insert(snipps, s({trig="tcolor_def_marker", name="marker box"}, fmt(
+	table.insert(snipps, s({trig="tcol_def_marker", name="marker box"}, fmt(
 		[[
 		\newtcolorbox{marker}[1][]{enhanced,
 			before skip balanced=2mm,after skip balanced=3mm,
@@ -1027,7 +1152,7 @@ function snip_gen.tcolorbox(snipps)
 		]], {}))
 	)
 
-	table.insert(snipps, s({trig="tcolor_def_commandbox", name="command box inline"}, fmt(
+	table.insert(snipps, s({trig="tcol_def_commandbox", name="command box inline"}, fmt(
 		[[
 		% needs lstlisting
 		\NewTotalTCBox{\commandbox}{ s v }
@@ -1036,8 +1161,23 @@ function snip_gen.tcolorbox(snipps)
 		\lstinline[language=command.com,keywordstyle=\color{blue!35!white}\bfseries]^#2^}
 		]], {}))
 	)
+	table.insert(snipps, s({trig="tcol_def_quote", name="box for quotes"}, fmt(
+		[[
+		\usepackage{tcolorbox}
+		\tcbuselibrary{breakable, skins}
+		\newtcolorbox{tcbQuote}{
+			boxrule=0pt,
+			frame hidden,
+			sharp corners,
+			enhanced,
+			borderline west={1pt}{0pt}{CtpRed},
+			colback=CtpMantle,
+			breakable,
+		}
+		]], {}))
+	)
 
-	table.insert(snipps, s({trig="tcolor_def_niceTitle", name="box with 3d title on top c.f. page 182 in manual"}, fmt(
+	table.insert(snipps, s({trig="tcol_def_niceTitle", name="box with 3d title on top c.f. page 182 in manual"}, fmt(
 		[[
 		% \usepackage{varwidth}
 		\newtcolorbox{mybox}[2][]{enhanced,skin=enhancedlast jigsaw,
@@ -1058,13 +1198,6 @@ function snip_gen.tcolorbox(snipps)
 		title={#2},#1}
 		]], {}))
 	)
-
-	-- table.insert(snipps, s({trig="tcolor_def_marker", name="marker box"}, fmt(
-	-- 	[[
-	-- 	]],
-	-- 	{
-	-- 	}))
-	-- )
 end
 
 local snipps = {}
