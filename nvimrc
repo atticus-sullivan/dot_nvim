@@ -73,6 +73,9 @@ Plug 'bullets-vim/bullets.vim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'teal-language/vim-teal'
 
+Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.x' }
+Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release' }
+
 " Start interactive EasyAlign in visual mode (e.g. vipga)
 xmap ga <Plug>(EasyAlign)
 
@@ -111,7 +114,7 @@ let g:tex_flavor = "latex"
 
 " set foldmethod=manual
 set foldmethod=expr
-set foldexpr=nvim_treesitter#foldexpr()
+lua vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
 set foldlevelstart=1
 set foldlevel=99
 " set nofoldenable
@@ -151,6 +154,8 @@ luafile ~/.config/nvim/plugins/nvim_tree.lua
 nnoremap <C-n> :NvimTreeToggle<CR>
 
 luafile ~/.config/nvim/plugins/mkdnflow.lua
+
+luafile ~/.config/nvim/plugins/telescope.lua
 
 " split navigation
 nnoremap <silent> <A-Up> :wincmd k<CR>
@@ -276,8 +281,8 @@ augroup end
 " begin to scrol 5 lines from the bottom/top
 set scrolloff=5
 
-noremap <silent>m //e<CR>
-noremap <silent>M //<CR>
+" noremap <silent>m //e<CR>
+" noremap <silent>M //<CR>
 
 augroup gitSpaceInd "indent with spaces for these directories (git repo most often)
 	autocmd!
@@ -298,6 +303,7 @@ augroup end
 augroup spellStuff " set spell specific stuff
 	autocmd!
 	autocmd BufNewFile,BufRead /home/lukas/Nextcloud/BA/thesis/* set spelllang=en_us spellfile=/home/lukas/Nextcloud/BA/thesis/spell.add spell
+	autocmd BufNewFile,BufRead /media/daten/education/studium/semester-12_m4/iot/ctfs/*/writeups/*.md setlocal spelllang=en_us spellfile=/media/daten/education/studium/semester-12_m4/iot/ctfs/.nvim.en.utf-8.add spell
 augroup end
 
 au BufRead,BufNewFile /home/lukas/studium/numprog/cheatsheet.tex syntax sync fromstart
@@ -312,8 +318,8 @@ nnoremap <LEFT> <NOP>
 nnoremap <RIGHT> <NOP>
 
 " pasting with <leader>p avoids overwriting the pastebuffer
-xmap <leader>p "_dp
-xmap <leader>P "_dP
+xmap <leader>p "_dkp
+xmap <leader>P "_dkP
 
 "showing tabs etc
 set list

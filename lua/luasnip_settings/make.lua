@@ -83,6 +83,7 @@ return {
 	clean:
 		-test -d $(AUX)  && $(RM) -r $(AUX)
 
+	# chktex -wall -n22 -n30 -n24 -I -H -v main.tex
 	spellA: $(FILES)
 		-aspell --home-dir=. --personal=dict.txt -l de_DE -t -c "$<<"
 		iconv -f ISO-8859-1 -t UTF-8 ./dict.txt >> ./dict.txt2

@@ -1214,6 +1214,22 @@ table.insert(snipps, s({trig="title", name="storing commands for maketitle"}, fm
 		author=i(2),
 	}))
 )
+table.insert(snipps, s({trig="spoiler", name="spoiler for wiki"}, fmt(
+	[[\spoiler[<>][<>][<>]{<>}]],
+	{
+		i(1),
+		i(2),
+		i(3),
+		i(4),
+	}), {})
+)
+table.insert(snipps, s({trig="hrr", name="ref in wiki"}, fmt(
+	[[\hyperref[<>]{<>}]],
+	{
+		i(1),
+		rep(1),
+	}), {})
+)
 
 for _,foo in pairs(snip_gen) do
 	assert(type(foo) == "function", "invalid field")

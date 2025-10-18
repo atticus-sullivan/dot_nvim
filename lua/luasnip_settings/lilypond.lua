@@ -57,4 +57,30 @@ return {
 		pre  = i(1, "sn16"),
 		note = i(2, "sn16"),
 	})),
+	s("repeatAccent", fmt(
+		[[
+		\after {pos} {{
+			\once \override BalloonText.annotation-balloon = ##f
+			\once \override BalloonText.annotation-line    = ##f
+			\once \override BalloonText.text-alignment-X  = -1
+			\balloonGrobText BarLine #'(0.1 . 1.5) \markup {{ \musicglyph #"scripts.sforzato" }}
+		}}
+		]],
+		{
+			pos = i(1, "1*4"),
+	})),
+	s("voltaA", fmt(
+		[[
+		\repeat volta {num} {{
+			{musicA}
+			\alternative {{
+				\volta 1 {{{musicB}}}
+			}}
+		}}
+		]],
+		{
+			num = i(1, "2"),
+			musicA = i(2, "music"),
+			musicB = i(3, "music"),
+	})),
 }
