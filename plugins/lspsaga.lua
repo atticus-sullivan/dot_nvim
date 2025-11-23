@@ -116,3 +116,48 @@ lspsaga.setup {
 		frequency = 7,
 	},
 }
+
+vim.api.nvim_create_autocmd("LspAttach", {
+	callback = function(event)
+		local opts = { noremap = true, silent = true, buffer = event.buf }
+
+		-- buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+		-- vim.keymap.set('n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>',                       opts)
+		-- vim.keymap.set('n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>',                    opts)
+		-- vim.keymap.set('n', '<space>wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>', opts)
+
+
+		vim.keymap.set("n", "gh", "<cmd>Lspsaga finder def+ref<cr>",    opts)
+		vim.keymap.set("n", "gd", "<cmd>Lspsaga peek_definition<cr>",    opts)
+		vim.keymap.set("n", "gD", "<cmd>Lspsaga goto_definition<cr>",    opts)
+		vim.keymap.set("n", "gr", "<cmd>Lspsaga rename ++project<cr>",                opts)
+		vim.keymap.set("n", "gx", "<cmd>Lspsaga code_action<cr>",           opts)
+		vim.keymap.set("x", "gx", ":<c-u>Lspsaga range_code_action<cr>",    opts)
+		vim.keymap.set("n", "K",  "<cmd>Lspsaga hover_doc<cr>",             opts)
+		-- vim.keymap.set("n", "K",  "<cmd>Lspsaga hover_doc<cr>",             vim.tbl_deep_extend('force', opts, {noremap=false}))
+		vim.keymap.set("n", "go", "<cmd>Lspsaga show_line_diagnostics<cr>", opts)
+		vim.keymap.set("n", "gJ", "<cmd>Lspsaga diagnostic_jump_next<cr>",  opts)
+		vim.keymap.set("n", "gK", "<cmd>Lspsaga diagnostic_jump_prev<cr>",  opts)
+		--
+		vim.keymap.set("n", "gO", "<cmd>Lspsaga outgoing_calls<cr>", opts)
+		vim.keymap.set("n", "gI", "<cmd>Lspsaga incoming_calls<cr>", opts)
+		-- vim.keymap.set("n", "<C-j>", "<cmd>lua require('lspsaga.action').smart_scroll_with_saga(-1, '<c-j>')<cr>", {})
+		-- vim.keymap.set("n", "<C-k>", "<cmd>lua require('lspsaga.action').smart_scroll_with_saga(1, '<c-k>')<cr>",  {})
+
+		-- Set some keybinds conditional on server capabilities
+		-- if client.server_capabilities.document_formatting then
+		-- 	vim.keymap.set("n", "<space>f", "<cmd>lua vim.lsp.buf.formatting()<CR>", opts)
+		-- end
+		-- if client.server_capabilities.document_range_formatting then
+		-- 	vim.keymap.set("v", "<space>f", "<cmd>lua vim.lsp.buf.range_formatting()<CR>", opts)
+		-- end
+	end
+})
+
+vim.keymap.set('n', '<C-j>', function() require('lspsaga.action').smart_scroll_with_saga(1) end)
+vim.keymap.set('n', '<C-k>', function() require('lspsaga.action').smart_scroll_with_saga(-1) end)
+
+vim.cmd("hi LspReferenceRead cterm=bold ctermbg=red guibg=LightYellow")
+vim.cmd("hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow")
+vim.cmd("hi LspReferenceWrite cterm=bold ctermbg=red guibg=LightYellow")

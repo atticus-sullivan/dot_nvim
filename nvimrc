@@ -141,7 +141,31 @@ luafile ~/.config/nvim/plugins/treesitter.lua
 " luafile ~/.config/nvim/plugins/dap.lua
 
 " lsp
-luafile ~/.config/nvim/plugins/lsp.lua
+lua<<EOF
+vim.lsp.enable{
+	"lua_ls",
+	"gopls",
+	"clangd",
+	"teal_ls",
+	"rust_analyzer",
+	"markdown_oxide",
+	"jedi_language_server",
+}
+vim.diagnostic.config({
+	virtual_text = true,
+	signs = true,
+	update_in_insert = true,
+	underline = true,
+	severity_sort = false,
+	float = {
+		border = 'rounded',
+		source = 'always',
+		header = '',
+		prefix = '',
+	},
+})
+EOF
+
 luafile ~/.config/nvim/plugins/lsp_signature.lua
 luafile ~/.config/nvim/plugins/lspsaga.lua
 set scl=yes
