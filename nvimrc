@@ -20,9 +20,8 @@ call plug#begin('~/.config/nvim/plugged')
 
 " Declare the list of plugins.
 Plug 'tpope/vim-surround'
-Plug 'numToStr/Comment.nvim'
+Plug 'nvim-mini/mini.comment'
 Plug 'andymass/vim-matchup'
-" Plug 'tpope/vim-commentary'
 " Plug 'luochen1990/rainbow'
 
 Plug 'L3MON4D3/LuaSnip'
@@ -30,19 +29,22 @@ Plug 'L3MON4D3/LuaSnip'
 
 Plug 'lervag/vimtex'
 Plug 'gisraptor/vim-lilypond-integrator'
-" Plug 'arcticicestudio/nord-vim'
 Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
-Plug 'itchyny/lightline.vim'
-Plug 'josa42/nvim-lightline-lsp'
+Plug 'nvim-lualine/lualine.nvim'
+" Plug 'itchyny/lightline.vim'
+" Plug 'josa42/nvim-lightline-lsp'
 
 Plug 'neovim/nvim-lspconfig'
-Plug 'ray-x/lsp_signature.nvim'
+" Plug 'ray-x/lsp_signature.nvim'
 Plug 'nvimdev/lspsaga.nvim'
 Plug 'simrat39/rust-tools.nvim'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'lukas-reineke/indent-blankline.nvim'
+
+Plug 'folke/todo-comments.nvim'
 
 Plug 'hrsh7th/cmp-nvim-lsp'
-Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
+" Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
 Plug 'hrsh7th/cmp-buffer'
 Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-calc'
@@ -91,17 +93,9 @@ function! NvimGdbNoTKeymaps()
   tnoremap <silent> <buffer> <esc> <c-\><c-n>
 endfunction
 
-" let g:nord_cursor_line_number_background = 1
-" let g:nord_bold_vertical_split_line = 1
-" let g:nord_uniform_diff_background = 1
-" let g:nord_bold = 1
-" let g:nord_italic = 1
-" let g:nord_italic_comments = 1
-" let g:nord_underline = 1
-" colorscheme nord
 set termguicolors
 luafile ~/.config/nvim/plugins/catppuccin.lua
-colorscheme catppuccin " catppuccin-latte, catppuccin-frappe, catppuccin-macchiato, catppuccin-mocha
+colorscheme catppuccin-nvim " catppuccin-latte, catppuccin-frappe, catppuccin-macchiato, catppuccin-mocha
 " highlight Normal guibg=000000
 " highlight NvimTreeNormal guibg=000000
 syntax enable
@@ -126,13 +120,19 @@ source ~/.config/nvim/plugins/e_align.vim
 source ~/.config/nvim/plugins/vimtex.vim
 
 " comment
-luafile ~/.config/nvim/plugins/comment.lua
+luafile ~/.config/nvim/plugins/mini-comment.lua
 
 " snippets
 " source ~/.config/nvim/plugins/ultisnips.vim
 luafile ~/.config/nvim/plugins/luasnip.lua
 " luafile ~/.config/nvim/plugins/luasnip_dbg.lua
 luafile ~/.config/nvim/plugins/treesitter.lua
+luafile ~/.config/nvim/plugins/ibl.lua
+
+lua<<EOF
+require("todo-comments").setup{
+}
+EOF
 
 " languagetool/grammarous
 " source ~/.config/nvim/plugins/language.vim
@@ -166,13 +166,15 @@ vim.diagnostic.config({
 })
 EOF
 
-luafile ~/.config/nvim/plugins/lsp_signature.lua
+" luafile ~/.config/nvim/plugins/lsp_signature.lua
 luafile ~/.config/nvim/plugins/lspsaga.lua
 set scl=yes
 source ~/.config/nvim/plugins/cmp.vim
 
 " lightline
-source ~/.config/nvim/plugins/lightline.vim
+" source ~/.config/nvim/plugins/lightline.vim
+" lualine
+luafile ~/.config/nvim/plugins/lualine.lua
 
 luafile ~/.config/nvim/plugins/nvim_tree.lua
 nnoremap <C-n> :NvimTreeToggle<CR>
@@ -381,3 +383,6 @@ augroup gzip_local2
     autocmd FileAppendPre              *.xopp call gzip#appre("gzip -dn -S .xopp")
     autocmd FileAppendPost             *.xopp call gzip#write("gzip -S .xopp")
 augroup END
+
+" highlight nonascii guibg=Red ctermbg=1 term=standout
+" au BufReadPost * syntax match nonascii "[^\u0000-\u007F]"

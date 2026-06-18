@@ -30,6 +30,27 @@ return {
 	s("today", {
 		f(bash, {}, {user_args={"date +%d.%m.%y"}})
 	}),
+	s("spoilerFree",
+		fmt([[
+			{{{{< spoiler series="{series}" book="{book}" chapter="{chapter}" >}}}}
+			{here}
+			{{{{< /spoiler >}}}}
+		]], {
+				series  = c(1, {t("royalRanger")}),
+				book    = i(2, "6"),
+				chapter = i(3),
+				here    = i(0)
+		})
+	),
+	s("ref",
+		fmt([[
+		[{nameA}]({{{{< relref "../{type}/{nameB}" >}}}})
+		]], {
+				nameA    = i(1),
+				nameB    = rep(1),
+				["type"] = c(2, {t"characters", t"concepts", t"events", t"locations"})
+			})
+	),
 	s("note", 
 		fmt([[
 			# {title}

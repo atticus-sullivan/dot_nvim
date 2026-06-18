@@ -12,7 +12,6 @@ require('mkdnflow').setup({
         paths = true,
         tables = true
     },
-    filetypes = {md = true, rmd = true, markdown = true, tmd=true},
     create_dirs = true,
     perspective = {
         priority = 'root',
@@ -39,11 +38,13 @@ require('mkdnflow').setup({
         end
     },
     to_do = {
-        symbols = {' ', '-', 'X'},
-        update_parents = true,
-        not_started = ' ',
-        in_progress = '-',
-        complete = 'X'
+		status_order = { 'not_started', 'in_progress', 'complete' },
+		statuses = {
+			not_started = { marker = ' ', ... },
+			in_progress = { marker = '-', ... },
+			complete = { marker = { 'X', 'x' }, ... },
+		},
+		status_propagation = { up = true, down = true },
     },
     tables = {
         trim_whitespace = true,
